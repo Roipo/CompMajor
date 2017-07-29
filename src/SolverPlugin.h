@@ -35,7 +35,7 @@ public:
 	void initialize();
 	
 	bool mouse_move(int mouse_x, int mouse_y);
-	void process_mouse_move();
+	bool process_mouse_move();
 
 	bool mouse_down(int button, int modifier);
 	bool mouse_up(int button, int modifier);

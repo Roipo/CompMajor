@@ -245,11 +245,6 @@ bool SolverPlugin::pre_draw()
 {
 	if (solver_wrapper->progressed() || update_colors)
 		update_mesh();
-	if (mouse_updated)
-	{
-		process_mouse_move();
-		mouse_updated = false;
-	}
 	return false;
 }
 
@@ -421,10 +416,10 @@ bool SolverPlugin::mouse_move(int mouse_x, int mouse_y)
 	curr_mouse_x = mouse_x;
 	curr_mouse_y = mouse_y;
 	mouse_updated = true;
-	return true;
+	return process_mouse_move();
 }
 
-void SolverPlugin::process_mouse_move()
+bool SolverPlugin::process_mouse_move()
 {
 	int mouse_x = curr_mouse_x;
 	int mouse_y = curr_mouse_y;
@@ -438,24 +433,19 @@ void SolverPlugin::process_mouse_move()
 	if (rotation_enabled)
 	{
 		rotate(-y_diff, -x_diff);
-		return;
+		return true;
 	}
 	if (translation_enabled)
 	{
 		translate(x_diff, y_diff);
-		return;
+		return true;
 	}
 	if (uv_translation_enabled)
 	{
 		translate_uv_mesh(x_diff, y_diff);
-		return;
+		return true;
 	}
-	if (uv_translation_enabled)
-	{
-		translate_uv_mesh(x_diff, y_diff);
-		return;
-	}
-	return;
+	return false;
 }
 
 void SolverPlugin::draw_dot_on_mouse_location()
@@ -502,8 +492,10 @@ void SolverPlugin::translate_uv_mesh(double offset_x, double offset_y)
 void SolverPlugin::rotate(double phi_x, double phi_y)
 {
 	Rx.block<2, 2>(1, 1) << cos(phi_x), sin(phi_x), -sin(phi_x), cos(phi_x);
+	Rx(0, 0) = 1;
 	Ry.row(0) << cos(phi_y), 0, sin(phi_y);
 	Ry.row(2) << -sin(phi_y), 0, cos(phi_y);
+	Ry(1, 1) = 1;
 	Mat3 R = Ry*Rx;
 	MatX3 Vtemp = mesh_pos_down;
 	RVec3 col_mean = Vtemp.colwise().mean();

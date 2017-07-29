@@ -122,7 +122,7 @@
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(DevLibraries)\libigl\tutorial\build\libigl\nanogui\ext_build\glfw\src\Release;$(DevLibraries)\libigl\tutorial\build\libigl\glew\Release;$(DevLibraries)\libigl\tutorial\build\libigl\stb_image\Release;$(DevLibraries)\Pardiso;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(DevLibraries)\libigl\tutorial\build\libigl\nanogui\Debug;$(DevLibraries)\libigl\tutorial\build\libigl\nanogui\ext_build\glfw\src\Release;$(DevLibraries)\libigl\tutorial\build\libigl\glew\Release;$(DevLibraries)\libigl\tutorial\build\libigl\stb_image\Release;$(DevLibraries)\Pardiso;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew.lib;glfw3.lib;nanogui.lib;libpardiso500-WIN-X86-64.lib;stb_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
