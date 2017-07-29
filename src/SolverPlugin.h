@@ -38,6 +38,7 @@ public:
 	bool mouse_scroll(float delta_y);
 
 	void rotate(double phi_x, double phi_y);
+	inline string removeTrailingZeros(string& s);
 	void translate(double offset_x, double offset_y);
 	void translate_uv_mesh(double offset_x, double offset_y);
 	void translate_triangle(double offset_x, double offset_y);
@@ -82,12 +83,6 @@ public:
 
 	string mesh_filename;
 
-	MatX3 Vq;
-	MatX4i Fq;
-
-	MatX3 old_normals;
-	MatX3 face_N;
-
 	bool load_uv_from_file = false;
 
 	Vec3 xh_center_3d;
@@ -99,10 +94,6 @@ private:
 	// The 3d mesh
 	MatX3 V;
 	MatX3i F;
-
-	// the cut mesh
-	MatX3 V_cut;
-	MatX3i F_cut;
 
 	// Rotation matrices
 	Mat3 Rx, Ry;
@@ -116,9 +107,6 @@ private:
 	RVec3 point_pos;
 	bool move_point = false;
 	MatX3 mesh_3d_normals_down;
-
-	Vec2 projected_xh;
-	double xh_radius = 0.25;
 
 	bool mesh_loaded = false;
 	bool mouse_on_uv_side = false;
@@ -139,8 +127,13 @@ private:
 	bool MOUSE_MID = false;
 	bool MOUSE_RIGHT = false;
 
+	bool show_distortion_error = false;
 	bool colorByRGB=false;
 	MatX3 RGBColors;
+
+	//colors
+	RVec3 C, C_hover, white, red, C_merge, zero3, ones3, black;
+
 };
 
 #endif

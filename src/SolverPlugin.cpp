@@ -20,7 +20,14 @@ SolverPlugin::SolverPlugin()
 	: solver_wrapper(make_unique<SolverWrapper>()),
 	  bar(nullptr)
 {
-
+	C << 0.0, 1.0, 0.0;
+	C_hover << 0.854902, 0.647059, 0.12549;
+	white << 0.7, 0.7, .4;
+	red << 1.0, 0.0, 0.0;
+	C_merge << 51. / 255., 204. / 255., 1.0;
+	zero3 << 0., 0., 0.;
+	ones3 << 1., 1., 1.;
+	black << 0., 0., 0.;
 }
 
 void SolverPlugin::init(igl::viewer::Viewer *viewer)
@@ -55,7 +62,6 @@ void SolverPlugin::init(igl::viewer::Viewer *viewer)
 		
 	add_color_clamp_slider("Dist", max_dist_color_value, dist_color_clamp);
 	bar->addVariable("Show RGB", colorByRGB);
-	bar->addVariable("Store 3d Mesh", store_3d_mesh, true)->setFixedWidth(140);
 	bar->addVariable<bool>("Show distortion",
 		[&](bool value) { show_distortion_error = value; update_colors = true; },
 		[&]() { return show_distortion_error; },
@@ -63,8 +69,6 @@ void SolverPlugin::init(igl::viewer::Viewer *viewer)
 
 	bar->addButton("Export UV to OBJ", [&]() { export_uv_to_obj(); });
 		
-	mini_menu_old_pos = param_menu->position();
-
 	viewer->screen->performLayout();
 
 	viewer->core.is_animating = true;
@@ -149,7 +153,6 @@ void SolverPlugin::initialize()
 
 	// init colors of uv mesh
 	uv_triangle_colors = MatX3::Ones(solver_wrapper->solver->F.rows(), 3);
-	ones_vec = Vec::Ones(solver_wrapper->solver->F.rows());
 
 	viewer->get_mesh(mesh_id).set_colors(RVec3(1., 1., 1.));
 }
@@ -329,7 +332,6 @@ void SolverPlugin::update_mesh()
 
 bool SolverPlugin::mouse_down(int button, int modifier)
 {
-	update_highlights = false;
 	viewer->core.viewport << 0, 0, 2400, 1350;
 	igl::unproject(RVec3(viewer->down_mouse_x, viewer->screen->size()[1] - viewer->down_mouse_y, 0.), (viewer->core.view * viewer->get_mesh(uv_id).model).eval(), viewer->core.proj, viewer->core.viewport, projected_mouse_down);
 	mesh_pos_down = V;
@@ -372,14 +374,9 @@ bool SolverPlugin::mouse_down(int button, int modifier)
 
 bool SolverPlugin::mouse_up(int button, int modifier)
 {
-	if (rotation_enabled || translation_enabled || move_triangle_enabled || hit_triangle != -1)
-		update_colors = true;
 	rotation_enabled = false;
 	translation_enabled = false;
 
-	move_triangle_enabled = false;
-	applying_weight_enabled = false;
-	update_highlights = true;
 	if (uv_translation_enabled)
 	{
 		MatX2 Vs_new = viewer->get_mesh(uv_id).V.block(0, 0, solver_wrapper->solver->uv.rows(), 2);
@@ -415,7 +412,6 @@ bool SolverPlugin::mouse_move(int mouse_x, int mouse_y)
 		mouse_on_uv_side = false;
 	curr_mouse_x = mouse_x;
 	curr_mouse_y = mouse_y;
-	mouse_updated = true;
 	return process_mouse_move();
 }
 
@@ -448,20 +444,6 @@ bool SolverPlugin::process_mouse_move()
 	return false;
 }
 
-void SolverPlugin::draw_dot_on_mouse_location()
-{
-	update_dot_on_mouse_pos();
-	update_colors = true;
-}
-
-void SolverPlugin::update_dot_on_mouse_pos()
-{
-	double x = viewer->current_mouse_x;
-	double y = viewer->core.viewport(3) - viewer->current_mouse_y;
-	viewer->core.viewport << 0, 0, 1200, 1350;
-	igl::unproject(RVec3(x, y, 0.), (viewer->core.view * viewer->get_mesh(uv_id).model).eval(), viewer->core.proj, viewer->core.viewport, dot_on_mouse_pos);
-}
-
 void SolverPlugin::translate(double offset_x, double offset_y)
 {
  	MatX3 new_mesh_pos = mesh_pos_down;
@@ -469,16 +451,6 @@ void SolverPlugin::translate(double offset_x, double offset_y)
 	new_mesh_pos.col(1).array() += offset_y;
 	viewer->get_mesh(mesh_id).set_mesh(new_mesh_pos, F);
 	V = new_mesh_pos;
-}
-
-void SolverPlugin::translate_triangle(double offset_x, double offset_y)
-{
-	Mat32 new_pos = triangle_pos_down;
-	RVec2 offset(offset_x, offset_y);
-	new_pos.row(0) += offset;
-	new_pos.row(1) += offset;
-	new_pos.row(2) += offset;
-	moving_triangle_pos = new_pos;
 }
 
 void SolverPlugin::translate_uv_mesh(double offset_x, double offset_y)
