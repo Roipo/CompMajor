@@ -75,17 +75,11 @@ public:
 
 	bool update_colors = false;
 
-	bool store_3d_mesh = true;
+	shared_ptr<double> dist_color_clamp = make_shared<double>(1.0);
 
-	shared_ptr<double> dist_color_clamp = make_shared<double>(0.5);
-
-	shared_ptr<double> max_dist_color_value = make_shared<double>(1.0);
+	shared_ptr<double> max_dist_color_value = make_shared<double>(4.0);
 
 	string mesh_filename;
-
-	bool load_uv_from_file = false;
-
-	Vec3 xh_center_3d;
 
 private:
 	// Pointer to the nano gui
@@ -99,8 +93,7 @@ private:
 	Mat3 Rx, Ry;
 
 	MatX3 uv_triangle_colors, mesh_triangle_colors;
-	int hit_triangle = -1, last_hit_triangle = -1, hovered_triangle = -1, hovered_vertex = -1;
-	//RVec3 last_hit_triangle_color;
+	int hovered_triangle = -1, hovered_vertex = -1;
 	
 	MatX3 mesh_pos_down, uv_mesh_pos_down;
 	RVec3 last_mouse_pos, projected_mouse_down, point_pos_down;

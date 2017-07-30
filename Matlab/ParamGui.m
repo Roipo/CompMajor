@@ -115,13 +115,9 @@ CheckDrawExp.Value = true;
         RunExperiment({TxtMenuProxyType.Value});
     end
 
-    function OnRunExperimentAll(~)
-        ProxyTypesList=Parameterizer.ProxyTypesList;
-        RunExperiment(ProxyTypesList);
-    end
 %% Helper functions
     function RunExperiment(ProxyTypesList)
-        n=150;
+        n=50;
         data=struct('type',{},'Ki',{},'f',{},'stepSize',{},'g',{},'dx',{},'status',{},'conv_iter',{},'tsession',{});
         [K0,f0,g0] = Parameterizer.Initialize;
         
@@ -142,11 +138,11 @@ CheckDrawExp.Value = true;
             Parameterizer.SetProxyType(proxytype);
             Parameterizer.ResetOptimization;
             conv_iter = n;
-            bConverged = false;
             for j=2:n
                 try
                     [Ki(:,j),f(j),g(:,j),dx(j),stepSize(j)]=Parameterizer.DoIteration(Ki(:,j-1));
                     if CheckDrawExp.Value
+                        K.V=reshape(Ki(:,j),[],2)';
                         K.draw(Kh);
                         drawnow;
                     end
@@ -161,17 +157,6 @@ CheckDrawExp.Value = true;
                 xprev = Ki(:,j-1);
                 
                 status{j} = Parameterizer.OptimizationConverged(fcur , fprev, xcur, xprev);
-                if (~bConverged) && (fprev - fprev < 0)
-                    conv_iter = j;
-                    status{j} = 'ObjIncreased';
-                    bConverged = true;
-                    break;
-                end
-                if (~bConverged) && (~strcmp(status{j},'NotConverged'))
-                    conv_iter = j;
-                    bConverged = true;
-                    break;
-                end
             end
             t = toc;
             data{i}.type = proxytype;
@@ -190,7 +175,6 @@ CheckDrawExp.Value = true;
             display(['convergencr iter: ' num2str(conv_iter)])
             display(['objective val: ' num2str(f(conv_iter))])
             display(status{conv_iter})
-            
         end
         drawGraph(data);
         

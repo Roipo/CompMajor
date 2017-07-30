@@ -136,18 +136,13 @@ void SolverPlugin::initialize()
 		uv_id = viewer->add_mesh("UV");
 	}
 	viewer->get_mesh(mesh_id).set_mesh(V, F);
+	viewer->get_mesh(mesh_id).set_uv(solver_wrapper->solver->uv);
 	viewer->get_mesh(uv_id).set_mesh(solver_wrapper->solver->uv, solver_wrapper->solver->F);
-
-	// setup mesh soup
-	Mat3 face;
-	RVec3i verts;
 
 	RGBColors = V;
 	RGBColors.rowwise() -= RGBColors.colwise().minCoeff();
 	RGBColors *= RGBColors.colwise().maxCoeff().cwiseInverse().asDiagonal();
-	//viewer->get_mesh(mesh_id).set_mesh(V, F);
 
-	//viewer->get_mesh(mesh_id).set_colors(MatX3::Ones(F.rows(), 3));
 	viewer->get_mesh(uv_id).F;
 	viewer->get_mesh(uv_id).set_colors(MatX3::Ones(solver_wrapper->solver->F.rows(), 3));
 
@@ -265,7 +260,7 @@ void SolverPlugin::update_mesh()
 	if (colorByRGB)
 		uv_triangle_colors = RGBColors;
 	else
-		uv_triangle_colors = MatX3::Ones(3 * F.rows(), 3);
+		uv_triangle_colors = MatX3::Ones(F.rows(), 3);
 
 // 	viewer->get_mesh(uv_id).set_normals(viewer->get_mesh(mesh_id).F_normals);
 // 	viewer->get_mesh(uv_id).dirty |= viewer->get_mesh(uv_id).DIRTY_NORMAL;
@@ -277,34 +272,22 @@ void SolverPlugin::update_mesh()
 	MatX3 uv_dist_colors = MatX3::Ones(uv_triangle_colors.rows(), 3);
 	if (show_distortion_error)
 	{
-		RVec dist_vals = solver_wrapper->solver->energy->symDirichlet->Efi;
+		Vec dist_vals = solver_wrapper->solver->energy->symDirichlet->Efi;
 
 		// new dist color impl
-		RVec dist_err = dist_vals.transpose().array() - 4.;
+		Vec dist_err = dist_vals.transpose().array() - 4.;
 
 		// scale to [0, dist_cutoff]
 		dist_err = dist_err / *dist_color_clamp;
 		// map > 1 -> 1
 		dist_err= 1 - dist_err.unaryExpr([&](double val) { return (val > 1) ? 1 : val; }).array();
-
-		// map from face to vertex coloring
-		Mat3X mat_vertex_dist_vals;
-		igl::repmat(dist_err, 3, 1, mat_vertex_dist_vals);
-		Vec vertex_dist_vals = Eigen::Map<Vec>(mat_vertex_dist_vals.data(), 3 * mat_vertex_dist_vals.cols(), 1);
 		
-		uv_dist_colors.col(0) = uv_dist_colors.col(0).cwiseProduct(vertex_dist_vals);
-		uv_dist_colors.col(1) = uv_dist_colors.col(1).cwiseProduct(vertex_dist_vals);
+		uv_dist_colors.col(1) = uv_dist_colors.col(1).cwiseProduct(dist_err);
+		uv_dist_colors.col(2) = uv_dist_colors.col(2).cwiseProduct(dist_err);
 	}
 
-#pragma omp parallel for num_threads(3)
-	for (int i = 0; i < 3; ++i)
-	{
-		for (int j = 0; j < uv_triangle_colors.rows(); ++j)
-		{
-			double val = (uv_dist_colors(j, i)+uv_sep_colors(j, i))/2;
-			uv_triangle_colors(j, i) *= val;
-		}
-	}
+
+	uv_triangle_colors.array() *= uv_dist_colors.array();
 	
 
 	Vec3i face;
@@ -323,6 +306,9 @@ void SolverPlugin::update_mesh()
 
 
 	viewer->get_mesh(uv_id).points.resize(0, Eigen::NoChange);
+
+	viewer->get_mesh(uv_id).set_colors(uv_triangle_colors);
+	viewer->get_mesh(mesh_id).set_colors(uv_triangle_colors);
 
 	viewer->get_mesh(uv_id).dirty |= viewer->get_mesh(uv_id).DIRTY_AMBIENT;
 	viewer->get_mesh(mesh_id).dirty |= viewer->get_mesh(mesh_id).DIRTY_AMBIENT;
