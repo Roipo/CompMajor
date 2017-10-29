@@ -1,7 +1,7 @@
 #include "Newton.h"
 
 #include <chrono>
-#include <igl\flip_avoiding_line_search.h>
+#include <igl/flip_avoiding_line_search.h>
 
 Newton::Newton() {}
 
@@ -16,7 +16,6 @@ int Newton::step()
 	SS.clear();
 	SS.insert(SS.end(), SSd.begin(), SSd.end());
 // 	SS.insert(SS.end(), SSp.begin(), SSp.end());
-
 	pardiso->update_a(SS);
 	try
 	{
@@ -56,6 +55,7 @@ void Newton::internal_init()
 // 	IIp = energy->position->II;
 // 	JJp = energy->position->JJ;
 // 	SSp = energy->position->SS;
+
 
 	if (needs_init)
 	{ 

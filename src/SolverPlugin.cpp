@@ -8,13 +8,13 @@
 #include <unordered_set>
 #include <fstream>
 #include <algorithm>
-#include <igl\writeOBJ.h>
-#include <igl\unproject.h>
-#include <igl\png\writePNG.h>
-#include <igl\unproject_ray.h>
-#include <igl\file_dialog_save.h>
-#include <igl\viewer\ViewerData.h>
-#include <igl\unproject_onto_mesh.h>
+#include <igl/writeOBJ.h>
+#include <igl/unproject.h>
+#include <igl/png/writePNG.h>
+#include <igl/unproject_ray.h>
+#include <igl/file_dialog_save.h>
+#include <igl/viewer/ViewerData.h>
+#include <igl/unproject_onto_mesh.h>
 
 SolverPlugin::SolverPlugin()
 	: solver_wrapper(make_unique<SolverWrapper>()),
@@ -59,7 +59,7 @@ void SolverPlugin::init(igl::viewer::Viewer *viewer)
 	{
 		start_solver_thread();
 	});
-		
+
 	add_color_clamp_slider("Dist", max_dist_color_value, dist_color_clamp);
 	bar->addVariable("Show RGB", colorByRGB);
 	bar->addVariable<bool>("Show distortion",
@@ -68,7 +68,6 @@ void SolverPlugin::init(igl::viewer::Viewer *viewer)
 		true)->setFixedWidth(140);
 
 	bar->addButton("Export UV to OBJ", [&]() { export_uv_to_obj(); });
-		
 	viewer->screen->performLayout();
 
 	viewer->core.is_animating = true;
@@ -206,7 +205,7 @@ void SolverPlugin::add_color_clamp_slider(const string& name, const shared_ptr<d
 	viewer->ngui->addWidget(name, panel);
 }
 
-inline string SolverPlugin::removeTrailingZeros(string& s) {
+inline string SolverPlugin::removeTrailingZeros(string s) {
 	return s.erase(s.find_last_not_of('0') + 1, string::npos);
 }
 
@@ -318,7 +317,7 @@ void SolverPlugin::update_mesh()
 
 bool SolverPlugin::mouse_down(int button, int modifier)
 {
-	viewer->core.viewport << 0, 0, 2400, 1350;
+	viewer->core.viewport << 0, 0, 1600, 1350;
 	igl::unproject(RVec3(viewer->down_mouse_x, viewer->screen->size()[1] - viewer->down_mouse_y, 0.), (viewer->core.view * viewer->get_mesh(uv_id).model).eval(), viewer->core.proj, viewer->core.viewport, projected_mouse_down);
 	mesh_pos_down = V;
 	igl::viewer::ViewerData dt = viewer->get_mesh(uv_id);
@@ -333,7 +332,7 @@ bool SolverPlugin::mouse_down(int button, int modifier)
 
 	if (mouse_on_uv_side)
 	{
-		if (MOUSE_MID)
+		if (MOUSE_LEFT)
 		{
 			// if the solver is running, stop it during translation, and release it when releaseing the mouse
 			if (solver_wrapper->solver->is_running)
@@ -346,11 +345,11 @@ bool SolverPlugin::mouse_down(int button, int modifier)
 	}
 	else
 	{ // mouse on 3d mesh side
-		if (MOUSE_LEFT)
+		if (MOUSE_RIGHT)
 		{
 			rotation_enabled = true;
 		}
-		if (MOUSE_MID)
+		if (MOUSE_LEFT)
 		{
 			translation_enabled = true;
 		}
@@ -392,7 +391,7 @@ bool SolverPlugin::mouse_scroll(float delta_y)
 
 bool SolverPlugin::mouse_move(int mouse_x, int mouse_y)
 {
-	if (mouse_x <= 1200)
+	if (mouse_x <= 600)
 		mouse_on_uv_side = true;
 	else
 		mouse_on_uv_side = false;
@@ -408,7 +407,7 @@ bool SolverPlugin::process_mouse_move()
 
 	RVec3 curr_mouse_pos, curr_screen_space_mouse_pos;
 	curr_screen_space_mouse_pos << mouse_x, viewer->screen->size()[1] - mouse_y, 0.;
-	viewer->core.viewport << 0, 0, 2400, 1350;
+	viewer->core.viewport << 0, 0, 1600, 1350;
 	igl::unproject(curr_screen_space_mouse_pos, (viewer->core.view * viewer->get_mesh(uv_id).model).eval(), viewer->core.proj, viewer->core.viewport, curr_mouse_pos);
 	double x_diff = 2 * (curr_mouse_pos(0) - projected_mouse_down(0));
 	double y_diff = curr_mouse_pos(1) - projected_mouse_down(1);

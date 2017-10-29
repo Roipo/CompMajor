@@ -67,11 +67,11 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::init()
   
   
   /* Numbers of processors, value of OMP_NUM_THREADS */
-  var = getenv("OMP_NUM_THREADS");
-  if(var != NULL)
-    sscanf( var, "%d", &num_procs );
-  else 
- 	 throw std::runtime_error("Set environment OMP_NUM_THREADS to 1");
+  // var = getenv("OMP_NUM_THREADS");
+  // if(var != NULL)
+  //   sscanf( var, "%d", &num_procs );
+  // else 
+ 	//  throw std::runtime_error("Set environment OMP_NUM_THREADS to 1");
 	 
   iparm[2]  = num_procs;
   

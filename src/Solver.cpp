@@ -1,19 +1,20 @@
 #include "Solver.h"
 
 #include "Utils.h"
+#include "Energy.h"
 
 #include <iostream>
-#include <igl\readOBJ.h>
-#include <igl\file_dialog_open.h>
-#include <igl\flipped_triangles.h>
-#include <igl\map_vertices_to_circle.h>
-#include <igl\harmonic.h>
+#include <igl/readOBJ.h>
+#include <igl/file_dialog_open.h>
+#include <igl/flipped_triangles.h>
+#include <igl/map_vertices_to_circle.h>
+#include <igl/harmonic.h>
 
 Solver::Solver()
 	:
 	energy(make_shared<Energy>()),
 	param_mutex(make_unique<mutex>()),
-	mesh_mutex(make_unique<shared_mutex>()),
+	mesh_mutex(make_unique<shared_timed_mutex>()),
 	param_cv(make_unique<condition_variable>()),
 	num_steps(2147483647)
 {
@@ -70,14 +71,14 @@ void Solver::stop()
 void Solver::update_external_mesh()
 {
 	give_param_slot();
-	unique_lock<shared_mutex> lock(*mesh_mutex);
+	unique_lock<shared_timed_mutex> lock(*mesh_mutex);
 	internal_update_external_mesh();
 	progressed = true;
 }
 
 void Solver::get_mesh(MatX2& X)
 {
-	unique_lock<shared_mutex> lock(*mesh_mutex);
+	unique_lock<shared_timed_mutex> lock(*mesh_mutex);
 	X = Eigen::Map<MatX2>(ext_x.data(), ext_x.rows() / 2, 2);
 	progressed = false;
 }

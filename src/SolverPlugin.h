@@ -6,10 +6,10 @@
 #include "EigenTypes.h"
 #include "SolverWrapper.h"
 
-#include <igl\viewer\Viewer.h>
-#include <igl\viewer\ViewerPlugin.h>
+#include <igl/viewer/Viewer.h>
+#include <igl/viewer/ViewerPlugin.h>
 #include <thread>
-#include <nanogui\slider.h>
+#include <nanogui/slider.h>
 
 #ifndef INT_INF
 #define INT_INF numeric_limits<int>::max()
@@ -38,7 +38,7 @@ public:
 	bool mouse_scroll(float delta_y);
 
 	void rotate(double phi_x, double phi_y);
-	inline string removeTrailingZeros(string& s);
+	inline string removeTrailingZeros(string s);
 	void translate(double offset_x, double offset_y);
 	void translate_uv_mesh(double offset_x, double offset_y);
 	void translate_triangle(double offset_x, double offset_y);

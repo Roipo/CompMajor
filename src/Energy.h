@@ -2,6 +2,8 @@
 
 #include "EigenTypes.h"
 #include "EnergySymDir.h"
+#include "Position.h"
+
 
 #include <memory>
 
@@ -18,10 +20,9 @@ public:
 
 	// helper functions
 	inline void map_to_X(const Vec& x);
-
+    double w;
 // 	unique_ptr<Position> position;
 	unique_ptr<DistortionSymDir> symDirichlet;
-
 	// Internally work with two-column matrix instead
 	// of a vector, which is used in the solver
 	MatX2 X;

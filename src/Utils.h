@@ -6,13 +6,13 @@
 #include "EigenTypes.h"
 
 #include <vector>
-#include <igl\local_basis.h>
-#include <igl\boundary_loop.h>
-#include <igl\per_face_normals.h>
-#include <igl\doublearea.h>
+#include <igl/local_basis.h>
+#include <igl/boundary_loop.h>
+#include <igl/per_face_normals.h>
+#include <igl/doublearea.h>
 
 // for EXCEPTION_POINTERS
-#include <Windows.h>
+//#include <Windows.h>
 
 using namespace std;
 
