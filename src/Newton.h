@@ -5,7 +5,7 @@
 #include "PardisoSolver.h"
 
 #include <iostream>
-#include <Eigen\SparseCholesky>
+#include <Eigen/SparseCholesky>
 
 using namespace std;
 
