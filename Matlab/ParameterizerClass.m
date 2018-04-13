@@ -111,7 +111,7 @@ classdef ParameterizerClass < matlab.mixin.Copyable
                     [f,g]=ComputeEnergy(obj,reshape(K.V',[],1));
                     %calculated scale for min sym-dirichlet energy
                     [fDirichlet,finvDirichlet]=obj.Energy.ComputeSymmetricDirichletParts();
-                    scale = (finvDirichlet/fDirichlet)^ 0.25;
+                    scale = 1/sum(obj.M.computeTriangleAreas); %(finvDirichlet/fDirichlet)^ 0.25;
                     K.V = scale*K.V;
                 otherwise
                     error('incorrect energy type')

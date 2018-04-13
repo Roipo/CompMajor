@@ -6,28 +6,30 @@
 #include "EigenTypes.h"
 #include "SolverWrapper.h"
 
-#include <igl/viewer/Viewer.h>
-#include <igl/viewer/ViewerPlugin.h>
+#include <igl/opengl/glfw/Viewer.h>
+#include <igl/opengl/glfw/ViewerPlugin.h>
+#include <igl/opengl/glfw/imgui/ImGuiMenu.h>
+#include <igl/opengl/glfw/imgui/ImGuiHelpers.h>
+#include <imgui/imgui.h>
 #include <thread>
-#include <nanogui/slider.h>
 
 #ifndef INT_INF
 #define INT_INF numeric_limits<int>::max()
 #endif
 
 using namespace std;
-using namespace nanogui;
+using namespace igl::opengl::glfw;
 
-class SolverPlugin : public igl::viewer::ViewerPlugin
+class SolverPlugin : public ViewerPlugin
 {
 public:
 	SolverPlugin();
-	void init(igl::viewer::Viewer *viewer);
+	void init(Viewer *viewer);
 
 	bool load(string filename);
 	void add_color_clamp_slider(const string& name, const shared_ptr<double>& max_value, const shared_ptr<double>& value);
 	void export_uv_to_obj();
-	void add_texture_slider(nanogui::Window* window, double& var, const string& name);
+// 	void add_texture_slider(nanogui::Window* window, double& var, const string& name);
 	void initialize();
 	
 	bool mouse_move(int mouse_x, int mouse_y);
@@ -41,7 +43,7 @@ public:
 	inline string removeTrailingZeros(string s);
 	void translate(double offset_x, double offset_y);
 	void translate_uv_mesh(double offset_x, double offset_y);
-	void translate_triangle(double offset_x, double offset_y);
+// 	void translate_triangle(double offset_x, double offset_y);
 	
 	bool pre_draw();
 	bool key_down(int key, int modifiers);
@@ -61,11 +63,11 @@ public:
 	unique_ptr<SolverWrapper> solver_wrapper;
 
 	// lambda slider
-	Slider *slider;
+// 	Slider *slider;
 
 	unsigned int uv_id = 0, mesh_id = 0;
 
-	double texture_size = 0.5;
+	float texture_size = 0.5;
 	double max_texture_val = 10.;
 
 	int solver_iter_counter = 0;
@@ -76,15 +78,14 @@ public:
 	bool update_colors = false;
 
 	shared_ptr<double> dist_color_clamp = make_shared<double>(1.0);
-
 	shared_ptr<double> max_dist_color_value = make_shared<double>(4.0);
 
 	string mesh_filename;
 
 private:
-	// Pointer to the nano gui
-	nanogui::FormHelper* bar;
-	nanogui::Window* orig_window;
+	// Pointer to the imgui
+	igl::opengl::glfw::imgui::ImGuiMenu menu;
+
 	// The 3d mesh
 	MatX3 V;
 	MatX3i F;
@@ -108,10 +109,6 @@ private:
 	bool mouse_over_uv_mesh = false;
 	bool release_when_translation_done = false;
 
-	// minimalistic menu
-	nanogui::Window* param_menu;
-	nanogui::Window* bar_window;
-
 	// coords used in process_mouse_move
 	int curr_mouse_x, curr_mouse_y;
 
@@ -127,6 +124,8 @@ private:
 	//colors
 	RVec3 C, C_hover, white, red, C_merge, zero3, ones3, black;
 
+	int rightView;
+	int leftView;
 };
 
 #endif

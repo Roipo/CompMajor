@@ -4,14 +4,12 @@
 #define POSITION_H
 
 #include "EigenTypes.h"
-#include "autodiff.h"
 
 #include <map>
 using namespace std;
 
 typedef Vec Gradient;
 typedef Mat Hessian;
-typedef DScalar2<double, Gradient, Hessian> DScalar;
 
 class Position
 {

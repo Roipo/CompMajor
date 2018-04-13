@@ -117,7 +117,7 @@ CheckDrawExp.Value = true;
 
 %% Helper functions
     function RunExperiment(ProxyTypesList)
-        n=50;
+        n=100;
         data=struct('type',{},'Ki',{},'f',{},'stepSize',{},'g',{},'dx',{},'status',{},'conv_iter',{},'tsession',{});
         [K0,f0,g0] = Parameterizer.Initialize;
         

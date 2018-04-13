@@ -1,9 +1,12 @@
-#include <igl/viewer/Viewer.h>
+#include <igl/opengl/glfw/Viewer.h>
+#include <igl/opengl/glfw/imgui/ImGuiMenu.h>
+#include <igl/opengl/glfw/imgui/ImGuiHelpers.h>
+#include <imgui/imgui.h>
 #include "SolverPlugin.h"
 #include "Energy.h"
 
 using namespace std;
-using namespace igl::viewer;
+using namespace igl::opengl::glfw;
 
 int main(int argc, char** argv)
 {
@@ -12,13 +15,11 @@ int main(int argc, char** argv)
 
 	Viewer viewer;
 
-	SolverPlugin plugin;
-	viewer.core.rotation_type = igl::viewer::ViewerCore::ROTATION_TYPE_TRACKBALL;
-	viewer.plugins.push_back(&plugin);
-	viewer.core.background_color << 1., 1., 1., 1.; // 0.25, 0.25, 0.25, 1.0;
-	// set to ortographic view to synchronize pointer with models
-	viewer.core.orthographic = true;
+	SolverPlugin solverPlugin;
+//	viewer.core.rotation_type = viewer::ViewerCore::ROTATION_TYPE_TRACKBALL;
+	viewer.plugins.push_back(&solverPlugin);
+
 	// start viewer
-	viewer.launch(true, false, 2400, 1350);
+	viewer.launch(true, false,1920,1080);
 	return 0;
 }

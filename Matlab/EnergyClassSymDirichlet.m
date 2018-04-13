@@ -102,7 +102,10 @@ classdef EnergyClassSymDirichlet < handle
             ha = ComputeConeHessian(a1,a2,obj.x,walpha);
             hb = ComputeConeHessian(b1,b2,obj.x,wbeta);
             
-            H=Hggn+ha+hb;                       
+            H=Hggn+ha+hb;
+%             bNoProjection = 1;
+%             H2 = NewtonMex('Compute',obj.x,bNoProjection); 
+%             norm(H(:)-H2(:));
         end
         
         % This is a reference implementation which is less vectorized but

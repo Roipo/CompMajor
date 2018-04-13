@@ -8,6 +8,7 @@
 #include "PardisoSolver.h"
 #include <igl/sortrows.h>
 #include <igl/unique.h>
+#include <igl/unique_rows.h>
 #include <igl/matlab_format.h>
 
 
