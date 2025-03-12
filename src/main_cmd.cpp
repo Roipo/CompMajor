@@ -6,8 +6,8 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	unsigned int num_threads = max(atoi(getenv("OMP_NUM_THREADS")), 1);
-	omp_set_num_threads(num_threads);
+	// unsigned int num_threads = max(atoi(getenv("OMP_NUM_THREADS")), 1);
+	// omp_set_num_threads(num_threads);
 
 	if (argc < 3)
 	{
@@ -26,10 +26,12 @@ int main(int argc, char** argv)
 	solver.init(V, F);
 	for (int i = 0; i < atoi(argv[3]); i++)
 	{
+		cout << "Iteration " << i << endl;
 		solver.step();
 		solver.linesearch();
 	}
-
-	igl::writeOBJ(argv[2], V, F, MatX3(0,0), MatX3i(0,0), solver.uv, F);
+	
+	Mat uv = Eigen::Map<MatX2>(solver.m_x.data(), solver.m_x.rows() / 2, 2);
+	igl::writeOBJ(argv[2], V, F, MatX3(), MatX3i(), uv, F);
 	return 0;
 }

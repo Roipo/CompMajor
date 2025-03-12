@@ -5,6 +5,7 @@
 #include <functional>
 #include <Eigen/Core>
 #include <Eigen/Sparse>
+#include <mkl_types.h>
 
 class DistortionSymDir
 {
@@ -76,6 +77,6 @@ public:
 //per face hessians vector
    std::vector<Eigen::Matrix<double,6,6>> Hi;
    // pardiso variables
-   vector<int> II, JJ;
+   vector<MKL_INT> II, JJ;
    vector<double> SS;
 };

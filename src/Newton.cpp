@@ -2,24 +2,24 @@
 
 #include <chrono>
 #include <igl/flip_avoiding_line_search.h>
+#include <mkl_types.h>
 
-Newton::Newton() {}
+Newton::Newton() {
+	pardiso.set_type(2, true);
+}
 
 int Newton::step()
 {
 	eval_fgh(m_x, f, g, h);
 
- 	SSd = energy->symDirichlet->SS;
-
-// 	SSp = energy->position->SS; //TBD
+ 	SSd = energy->symDirichlet.SS;
 
 	SS.clear();
 	SS.insert(SS.end(), SSd.begin(), SSd.end());
-// 	SS.insert(SS.end(), SSp.begin(), SSp.end());
-	pardiso->update_a(SS);
+	pardiso.update_a(SS);
 	try
 	{
-		pardiso->factorize();
+		pardiso.factorize();
 	}
 	catch (runtime_error& err)
 	{
@@ -27,7 +27,7 @@ int Newton::step()
 		return -1;
 	}
 	Vec rhs = -g;
-	pardiso->solve(rhs, p);
+	pardiso.solve(rhs, p);
 	return 0;
 }
 
@@ -38,40 +38,32 @@ bool Newton::test_progress()
 
 void Newton::internal_init()
 {
-	bool needs_init = pardiso == nullptr;
-
-	if (needs_init)
-	{
-		pardiso = make_unique<PardisoSolver<vector<int>, vector<double>>>();
-		pardiso->set_type(2, true);
-	}
-
 	eval_fgh(m_x, f, g, h);
+	
+	
+	IId = energy->symDirichlet.II;
+	JJd = energy->symDirichlet.JJ;
+	SSd = energy->symDirichlet.SS;
 
-	IId = energy->symDirichlet->II;
-	JJd = energy->symDirichlet->JJ;
-	SSd = energy->symDirichlet->SS;
+    // convert to eigen triplets
+    std::vector<Eigen::Triplet<double>> triplets;
+    triplets.reserve(IId.size());
+    for (size_t i = 0; i < IId.size(); ++i) {
+        triplets.emplace_back(IId[i], JJd[i], SSd[i]);
+    }
+    
+    // Create sparse matrix (assuming you want a square matrix)
+    MKL_INT n = *std::max_element(IId.begin(), IId.end()) + 1;
+    Eigen::SparseMatrix<double> sparse_matrix(n, n);
+    sparse_matrix.setFromTriplets(triplets.begin(), triplets.end());
 
-// 	IIp = energy->position->II;
-// 	JJp = energy->position->JJ;
-// 	SSp = energy->position->SS;
+	// find pattern for initialization
+	II.insert(II.end(), IId.begin(), IId.end());
+	JJ.insert(JJ.end(), JJd.begin(), JJd.end());
+	SS.insert(SS.end(), SSd.begin(), SSd.end());
 
-
-	if (needs_init)
-	{ 
-		// find pattern for initialization
-		II.insert(II.end(), IId.begin(), IId.end());
-// 		II.insert(II.end(), IIp.begin(), IIp.end());
-
-		JJ.insert(JJ.end(), JJd.begin(), JJd.end());
-// 		JJ.insert(JJ.end(), JJp.begin(), JJp.end());
-
-		SS.insert(SS.end(), SSd.begin(), SSd.end());
-// 		SS.insert(SS.end(), SSp.begin(), SSp.end());
-
-		pardiso->set_pattern(II, JJ, SS);
-		pardiso->analyze_pattern();
-	}
+	pardiso.set_pattern(II, JJ, SS);
+	pardiso.analyze_pattern();
 }
 
 void Newton::internal_update_external_mesh()

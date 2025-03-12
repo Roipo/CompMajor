@@ -25,8 +25,7 @@ private:
 	double eval_ls(Mat& x);
 
 	// norm of the progress on the mesh
-	double diff_norm;
+	double diff_norm=0.0;
 
-	unique_ptr<PardisoSolver<vector<int>, vector<double>>> pardiso = nullptr;
-	long long int prevTime;
+	PardisoSolver<vector<MKL_INT>, vector<double>> pardiso;
 };

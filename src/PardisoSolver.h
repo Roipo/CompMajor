@@ -12,30 +12,21 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+#include <mkl_pardiso.h>
+
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, Eigen version 
 //Olga Diamanti's method for PARDISO
 void extract_ij_from_matrix(const Eigen::SparseMatrix<double> &A,
-	Eigen::VectorXi &II,
-	Eigen::VectorXi &JJ,
+	Eigen::VectorX<MKL_INT> &II,
+	Eigen::VectorX<MKL_INT> &JJ,
 	Eigen::VectorXd &SS);
 
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, std::vector version
 void extract_ij_from_matrix(const Eigen::SparseMatrix<double> &A,
-	std::vector<int> &II,
-	std::vector<int> &JJ,
+	std::vector<MKL_INT> &II,
+	std::vector<MKL_INT> &JJ,
 	std::vector<double> &SS);
 
- extern "C" {
- /* PARDISO prototype. */
- void pardisoinit (void   *, int    *,   int *, int *, double *, int *);
- void pardiso     (void   *, int    *,   int *, int *,    int *, int *,
-                   double *, int    *,    int *, int *,   int *, int *,
-                   int *, double *, double *, int *, double *);
- void pardiso_chkmatrix  (int *, int *, double *, int *, int *, int *);
- void pardiso_chkvec     (int *, int *, double *, int *);
- void pardiso_printstats (int *, int *, double *, int *, int *, int *,
-                          double *, int *);
- }
 
 template <typename vectorTypeI, typename vectorTypeS>
  class PardisoSolver
@@ -65,12 +56,13 @@ template <typename vectorTypeI, typename vectorTypeS>
    //vector that indicates which of the elements II,JJ input will be
    //kept and read into the matrix (for symmetric matrices, only those
    //elements II[i],JJ[i] for which II[i]<<JJ[i] will be kept)
-   std::vector<int> lower_triangular_ind;
+   std::vector<MKL_INT> lower_triangular_ind;
 
-   Eigen::VectorXi ia, ja;
-   std::vector<Eigen::VectorXi> iis;
+   Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> ia, ja;
+   std::vector<Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1>> iis;
+
    Eigen::VectorXd a;
-   int numRows;
+   MKL_INT numRows;
 
    //pardiso stuff
    /*
@@ -79,7 +71,6 @@ template <typename vectorTypeI, typename vectorTypeS>
     -2: real and symmetric indefinite, diagonal or Bunch-Kaufman pivoting
     11: real and nonsymmetric, complete supernode pivoting
     */
-   int mtype;       /* Matrix Type */
 
    // Remember if matrix is symmetric or not, to
    // decide whether to eliminate the non-upper-
@@ -87,24 +78,16 @@ template <typename vectorTypeI, typename vectorTypeS>
    bool is_symmetric;
    bool is_upper_half;
    
-   int nrhs = 1;     /* Number of right hand sides. */
-   /* Internal solver memory pointer pt, */
-   /* 32-bit: int pt[64]; 64-bit: long int pt[64] */
-   /* or void *pt[64] should be OK on both architectures */
-   void *pt[64];
-   /* Pardiso control parameters. */
-   int iparm[64];
-   double   dparm[64];
-   int maxfct, mnum, phase, error, msglvl, solver =0;
-   /* Number of processors. */
-   int      num_procs;
-   /* Auxiliary variables. */
-   char    *var;
-   int i, k;
-   double ddum;          /* Double dummy */
-   int idum;         /* Integer dummy. */
-
-};
+   void* pt[64];
+   MKL_INT mtype;
+   MKL_INT nrhs = 1;
+   MKL_INT iparm[64];
+   double dparm[64];
+   MKL_INT maxfct, mnum, phase, error, msglvl, solver = 0;
+   MKL_INT num_procs;
+   MKL_INT idum = 0;
+   double ddum = 0;
+ };
 
 
 #endif /* defined(_PardisoSolver__) */

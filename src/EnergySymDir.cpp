@@ -188,7 +188,7 @@ bool DistortionSymDir::updateJ(const MatX2& X)
 void DistortionSymDir::UpdateSSVDFunction()
 {
 
-#pragma omp parallel for num_threads(24)
+//#pragma omp parallel for num_threads(24)
 	for (int i = 0; i < a.size(); i++)
 	{
 		Eigen::Matrix2d A;

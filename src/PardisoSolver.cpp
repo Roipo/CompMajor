@@ -52,7 +52,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::init()
 
    error = 0;
    solver=0;/* use sparse direct solver */
-   pardisoinit (pt,  &mtype, &solver, iparm, dparm, &error);
+   pardisoinit (pt,  &mtype, iparm);
 
    if (error != 0)
    {
@@ -101,12 +101,12 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::update_a(const vectorTypeS &SS_)
    if (mtype ==-1)
 	   throw std::runtime_error("Pardiso mtype not set.");
  vectorTypeS SS;
-  int numel = SS_.size();
-  int ntotal = numel +numRows;
+  MKL_INT numel = SS_.size();
+  MKL_INT ntotal = numel +numRows;
   SS.resize(ntotal);
-  for (int k = 0; k < numel; ++k)
+  for (MKL_INT k = 0; k < numel; ++k)
     SS[k] = SS_[k];
-  for (int k = 0; k < numRows; ++k)
+  for (MKL_INT k = 0; k < numRows; ++k)
     SS[numel+k] = 0;
    vectorTypeS SS_true = SS;
 
@@ -114,15 +114,15 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::update_a(const vectorTypeS &SS_)
    if (is_symmetric && !is_upper_half)
    {
     SS_true.resize(lower_triangular_ind.size(),1);
-    for (int i = 0; i<lower_triangular_ind.size();++i)
+    for (MKL_INT i = 0; i<lower_triangular_ind.size();++i)
       SS_true[i] = SS[lower_triangular_ind[i]];
   }
   
 	      
-  for (int i=0; i<a.rows(); ++i)
+  for (MKL_INT i=0; i<a.rows(); ++i)
   {
     a(i) = 0;
-    for (int j=0; j<iis[i].size(); ++j)
+    for (MKL_INT j=0; j<iis[i].size(); ++j)
       a(i) += SS_true[iis[i](j)];
   }
 }
@@ -137,7 +137,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
   if (mtype ==-1)
   	throw std::runtime_error("Pardiso mtype not set.");
   numRows = 0;
-  for (int i=0; i<II_.size(); ++i)
+  for (MKL_INT i=0; i<II_.size(); ++i)
     if (II_[i] > numRows )
       numRows = II_[i];
   numRows ++;
@@ -147,18 +147,18 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
   vectorTypeI II;
   vectorTypeI JJ;
   vectorTypeS SS;
-  int numel = II_.size();
-  int ntotal = numel +numRows;
+  MKL_INT numel = II_.size();
+  MKL_INT ntotal = numel +numRows;
   II.resize(ntotal);
   JJ.resize(ntotal);
   SS.resize(ntotal);
-  for (int k = 0; k < numel; ++k)
+  for (MKL_INT k = 0; k < numel; ++k)
   {
     II[k] = II_[k];
     JJ[k] = JJ_[k];
     SS[k] = SS_[k];
   }
-  for (int k = 0; k < numRows; ++k)
+  for (MKL_INT k = 0; k < numRows; ++k)
   {
     II[numel+k] = k;
     JJ[numel+k] = k;
@@ -167,17 +167,17 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
   
   
   vectorTypeS SS_true = SS;
-  Eigen::MatrixXi M0;
+  Eigen::Matrix<MKL_INT, Eigen::Dynamic, Eigen::Dynamic> M0;
   //if the matrix is symmetric, only store upper triangular part
   if (is_symmetric && !is_upper_half)
   {
     lower_triangular_ind.reserve(II.size()/2 + numRows / 2 + 1);
-    for (int i = 0; i<II.size();++i)
+    for (MKL_INT i = 0; i<II.size();++i)
       if (II[i]<=JJ[i])
         lower_triangular_ind.push_back(i);
     M0.resize(lower_triangular_ind.size(),3);
     SS_true.resize(lower_triangular_ind.size(),1);
-    for (int i = 0; i<lower_triangular_ind.size();++i)
+    for (MKL_INT i = 0; i<lower_triangular_ind.size();++i)
     {
       M0.row(i)<< II[lower_triangular_ind[i]], JJ[lower_triangular_ind[i]], i;
       SS_true[i] = SS[lower_triangular_ind[i]];
@@ -186,18 +186,18 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
   else
   {
     M0.resize(II.size(),3);
-    for (int i = 0; i<II.size();++i)
+    for (MKL_INT i = 0; i<II.size();++i)
       M0.row(i)<< II[i], JJ[i], i;
   }
   
   //temps
-  Eigen::MatrixXi t;
-  Eigen::VectorXi tI;
+  Eigen::Matrix<MKL_INT, Eigen::Dynamic, Eigen::Dynamic> t;
+  Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> tI;
   
-  Eigen::MatrixXi M_;
+  Eigen::Matrix<MKL_INT, Eigen::Dynamic, Eigen::Dynamic> M_;
   igl::sortrows(M0, true, M_, tI);
   
-  int si,ei,currI;
+  MKL_INT si,ei,currI;
   si = 0;
   while (si<M_.rows())
   {
@@ -210,12 +210,12 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
     si = ei;
   }
   
-  Eigen::MatrixXi M;
-  Eigen::VectorXi IM_;
+  Eigen::Matrix<MKL_INT, Eigen::Dynamic, Eigen::Dynamic> M;
+  Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> IM_;
   igl::unique_rows(M_.leftCols(2).eval(), M, IM_, tI);
-  int numUniqueElements = M.rows();
+  MKL_INT numUniqueElements = M.rows();
   iis.resize(numUniqueElements);
-  for (int i=0; i<numUniqueElements; ++i)
+  for (MKL_INT i=0; i<numUniqueElements; ++i)
   {
     si = IM_(i);
     if (i<numUniqueElements-1)
@@ -226,10 +226,10 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
   }
   
   a.resize(numUniqueElements, 1);
-  for (int i=0; i<numUniqueElements; ++i)
+  for (MKL_INT i=0; i<numUniqueElements; ++i)
   {
     a(i) = 0;
-    for (int j=0; j<iis[i].size(); ++j)
+    for (MKL_INT j=0; j<iis[i].size(); ++j)
       a(i) += SS_true[iis[i](j)];
   }
   
@@ -238,7 +238,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
   ia.setZero(numRows+1,1);ia(numRows) = numUniqueElements+1;
   ja = M.col(1).array()+1;
   currI = -1;
-  for (int i=0; i<numUniqueElements; ++i)
+  for (MKL_INT i=0; i<numUniqueElements; ++i)
   {
     if(currI != M(i,0))
     {
@@ -291,10 +291,13 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::analyze_pattern()
   /* -------------------------------------------------------------------- */
   phase = 11;
   
-  pardiso (pt, &maxfct, &mnum, &mtype, &phase,
-           &numRows, a.data(), ia.data(), ja.data(), &idum, &nrhs,
-           iparm, &msglvl, &ddum, &ddum, &error, dparm);
-  
+  //pardiso (pt, &maxfct, &mnum, &mtype, &phase,
+  //         &numRows, a.data(), ia.data(), ja.data(), &idum, &nrhs,
+  //         iparm, &msglvl, &ddum, &ddum, &error);
+  pardiso(pt, &maxfct, &mnum, &mtype, &phase, &numRows, a.data(), ia.data(),
+      ja.data(), &idum, &nrhs, iparm, &msglvl, &ddum, &ddum, &error);
+
+
   if (error != 0) 
   	throw std::runtime_error(std::string("\nERROR during symbolic factorization: ") + std::to_string(error));
 #ifdef PLOTS_PARDISO
@@ -318,7 +321,7 @@ bool PardisoSolver<vectorTypeI,vectorTypeS>::factorize()
   
   pardiso (pt, &maxfct, &mnum, &mtype, &phase,
            &numRows, a.data(), ia.data(), ja.data(), &idum, &nrhs,
-           iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+           iparm, &msglvl, &ddum, &ddum, &error);
   
   if (error != 0) 
   	throw std::runtime_error(std::string("\nERROR during numerical factorization: ")+std::to_string(error));
@@ -372,7 +375,7 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::solve(Eigen::VectorXd &rhs,
   
   pardiso (pt, &maxfct, &mnum, &mtype, &phase,
            &numRows, a.data(), ia.data(), ja.data(), &idum, &nrhs,
-           iparm, &msglvl, rhs.data(), result.data(), &error,  dparm);
+           iparm, &msglvl, rhs.data(), result.data(), &error);
   
   if (error != 0) 
   	throw std::runtime_error(std::string("\nERROR during solution: ") + std::to_string(error));
@@ -399,27 +402,27 @@ PardisoSolver<vectorTypeI,vectorTypeS>::~PardisoSolver()
   
   pardiso (pt, &maxfct, &mnum, &mtype, &phase,
            &numRows, &ddum, ia.data(), ja.data(), &idum, &nrhs,
-           iparm, &msglvl, &ddum, &ddum, &error,  dparm);
+           iparm, &msglvl, &ddum, &ddum, &error);
 }
 
-template class PardisoSolver<std::vector<int, std::allocator<int> >, std::vector<double, std::allocator<double> > >;
+template class PardisoSolver<std::vector<MKL_INT, std::allocator<MKL_INT> >, std::vector<double, std::allocator<double> > >;
 
-template class PardisoSolver<Eigen::Matrix<int, -1, 1, 0, -1, 1>, Eigen::Matrix<double, -1, 1, 0, -1, 1> >;
+template class PardisoSolver<Eigen::Matrix<MKL_INT, -1, 1, 0, -1, 1>, Eigen::Matrix<double, -1, 1, 0, -1, 1> >;
 
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, Eigen version 
 //Olga Diamanti's method for PARDISO
-void extract_ij_from_matrix(const Eigen::SparseMatrix<double>& A, Eigen::VectorXi & II, Eigen::VectorXi & JJ, Eigen::VectorXd & SS)
+void extract_ij_from_matrix(const Eigen::SparseMatrix<double>& A, Eigen::VectorX<MKL_INT> & II, Eigen::VectorX<MKL_INT> & JJ, Eigen::VectorXd & SS)
 {
 	II.resize(A.nonZeros());
 	JJ.resize(A.nonZeros());
 	SS.resize(A.nonZeros());
-	int ind = 0;
-	for (int k = 0; k < A.outerSize(); ++k)
+	MKL_INT ind = 0;
+	for (MKL_INT k = 0; k < A.outerSize(); ++k)
 		for (Eigen::SparseMatrix<double>::InnerIterator it(A, k); it; ++it)
 		{
 			double ss = it.value();
-			int ii = it.row();   // row index
-			int jj = it.col();   // row index
+			MKL_INT ii = it.row();   // row index
+			MKL_INT jj = it.col();   // row index
 			{
 				II[ind] = ii;
 				JJ[ind] = jj;
@@ -430,17 +433,17 @@ void extract_ij_from_matrix(const Eigen::SparseMatrix<double>& A, Eigen::VectorX
 }
 
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, std::vector version
-void extract_ij_from_matrix(const Eigen::SparseMatrix<double>& A, std::vector<int>& II, std::vector<int>& JJ, std::vector<double>& SS)
+void extract_ij_from_matrix(const Eigen::SparseMatrix<double>& A, std::vector<MKL_INT>& II, std::vector<MKL_INT>& JJ, std::vector<double>& SS)
 {
 	II.clear();
 	JJ.clear();
 	SS.clear();
-	for (int k = 0; k < A.outerSize(); ++k)
+	for (MKL_INT k = 0; k < A.outerSize(); ++k)
 		for (Eigen::SparseMatrix<double>::InnerIterator it(A, k); it; ++it)
 		{
 			double ss = it.value();
-			int ii = it.row();   // row index
-			int jj = it.col();   // row index
+			MKL_INT ii = it.row();   // row index
+			MKL_INT jj = it.col();   // row index
 			{
 				II.push_back(ii);
 				JJ.push_back(jj);
