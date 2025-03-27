@@ -1,13 +1,11 @@
 #pragma once
 
 #include "Energy.h"
-#include "EigenTypes.h"
 #include <mkl_types.h>
 
 #include <atomic>
 #include <functional>
 #include <shared_mutex>
-using namespace std;
 
 class Solver
 {
@@ -20,31 +18,30 @@ public:
 	// Pointer to the energy class
 	shared_ptr<Energy> energy;
 
-	MatX2 uv;
-	MatX3i F;
+	Eigen::MatrixX2d uv;
+	Eigen::MatrixX3i F;
 
 	// External (interface) and internal working mesh
-	Vec ext_x, m_x;
+	Eigen::VectorXd m_x;
 
-protected:
 	// Descent direction evaluated in step
 	Vec p;
 
 	// Function pointers to the full and value-only energy evaluation
-	function<void(const Vec&, double&)> eval_f;
-	function<void(const Vec&, double&, Vec&, SpMat&)> eval_fgh;
+	function<void(const Eigen::VectorXd&, double&)> eval_f;
+	function<void(const Eigen::VectorXd&, double&, Eigen::VectorXd&, SpMat&)> eval_fgh;
 	
 	// Current energy, gradient and hessian
 	double f;
-	Vec g;
-	SpMat h;
+	Eigen::VectorXd g;
+	Eigen::SparseMatrix<double> h;
 	
 	// pardiso variables
-	vector<MKL_INT> IId, JJd, IIp, JJp, II, JJ;
-	vector<double> SSd, SSp, SS;
+	vector<MKL_INT> IId, JJd, II, JJ;
+	vector<double> SSd, SS;
 
 private:
 	virtual int step() = 0;
 	virtual void linesearch() = 0;
-	virtual void internal_init() = 0;
+	virtual void initialize() = 0;
 };

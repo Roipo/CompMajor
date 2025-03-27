@@ -23,10 +23,9 @@ void Solver::init(const MatX3& V, const MatX3i& F)
 	computeTutte(V, F, uv);
 	energy->init(F.rows(), V, F);
 	m_x = Eigen::Map<Vec>(uv.data(), uv.rows() * uv.cols());
-	ext_x = m_x;
-	eval_f = bind(&Energy::evaluate_f, energy, _1, _2);
-	eval_fgh = bind(&Energy::evaluate_fgh, energy, _1, _2, _3, _4);
-	internal_init();
+	eval_f = [this](const Vec& x, double& f) { energy->evaluate_f(x, f); };
+	eval_fgh = [this](const Vec& x, double& f, Vec& g, SpMat& h) { energy->evaluate_fgh(x, f, g, h); };
+	initialize();
 }
 
 void Solver::computeTutte(const MatX3& V, const MatX3i& F, MatX2 &uv_init)

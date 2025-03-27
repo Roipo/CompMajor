@@ -5,6 +5,7 @@
 
 
 #include <memory>
+#include <chrono>
 
 using namespace std;
 
@@ -24,4 +25,15 @@ public:
 	// Internally work with two-column matrix instead
 	// of a vector, which is used in the solver
 	MatX2 X;
+
+	// Timing data
+	struct EvalTiming {
+		double value_time;
+		double gradient_time;
+		double hessian_time;
+	};
+	const EvalTiming& get_last_eval_timing() const { return last_eval_timing; }
+
+private:
+	EvalTiming last_eval_timing;
 };

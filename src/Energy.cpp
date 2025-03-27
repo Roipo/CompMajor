@@ -1,7 +1,8 @@
 #include "Energy.h"
+#include <chrono>
+
 Energy::Energy()
 {
-
 }
 
 void Energy::init(unsigned int nf, const MatX3& V, const MatX3i& F)
@@ -31,9 +32,23 @@ void Energy::evaluate_fgh(const Vec& x, double& f, Vec& g, SpMat& h)
 	Vec gs, gd;
 	SpMat hd;
 
+	// Time value computation
+	auto value_start = std::chrono::high_resolution_clock::now();
 	symDirichlet.value(X, fd);
+	auto value_end = std::chrono::high_resolution_clock::now();
+	last_eval_timing.value_time = std::chrono::duration<double>(value_end - value_start).count();
+
+	// Time gradient computation
+	auto gradient_start = std::chrono::high_resolution_clock::now();
 	symDirichlet.gradient(X, gd);
+	auto gradient_end = std::chrono::high_resolution_clock::now();
+	last_eval_timing.gradient_time = std::chrono::duration<double>(gradient_end - gradient_start).count();
+
+	// Time hessian computation
+	auto hessian_start = std::chrono::high_resolution_clock::now();
 	symDirichlet.hessian(X);
+	auto hessian_end = std::chrono::high_resolution_clock::now();
+	last_eval_timing.hessian_time = std::chrono::duration<double>(hessian_end - hessian_start).count();
 
 	f = fd;
 	g = gd;

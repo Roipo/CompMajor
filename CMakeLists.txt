@@ -14,6 +14,11 @@ include_directories(
     ${LIBIGL_EXTERNAL_DIR}/eigen
 )
 
+# Enable math defines for Windows
+if(WIN32)
+    add_definitions(-D_USE_MATH_DEFINES)
+endif()
+
 option(LIBIGL_WITH_OPENGL      "Use OpenGL"         OFF)
 
 # Your source files
