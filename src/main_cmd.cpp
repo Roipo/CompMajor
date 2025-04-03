@@ -1,6 +1,6 @@
 #include "Newton.h"
-#include <igl\read_triangle_mesh.h>
-#include <igl\writeOBJ.h>
+#include <igl/read_triangle_mesh.h>
+#include <igl/writeOBJ.h>
 #include <chrono>
 #include <iomanip>
 #include <sstream>

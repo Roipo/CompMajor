@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <Eigen/Sparse>
 
 #include <mkl_pardiso.h>
@@ -17,8 +18,8 @@
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, Eigen version 
 //Olga Diamanti's method for PARDISO
 void extract_ij_from_matrix(const Eigen::SparseMatrix<double> &A,
-	Eigen::VectorX<MKL_INT> &II,
-	Eigen::VectorX<MKL_INT> &JJ,
+	Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> &II,
+	Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> &JJ,
 	Eigen::VectorXd &SS);
 
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, std::vector version

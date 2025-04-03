@@ -411,7 +411,7 @@ template class PardisoSolver<Eigen::Matrix<MKL_INT, -1, 1, 0, -1, 1>, Eigen::Mat
 
 //extract II,JJ,SS (row,column and value vectors) from sparse matrix, Eigen version 
 //Olga Diamanti's method for PARDISO
-void extract_ij_from_matrix(const Eigen::SparseMatrix<double>& A, Eigen::VectorX<MKL_INT> & II, Eigen::VectorX<MKL_INT> & JJ, Eigen::VectorXd & SS)
+void extract_ij_from_matrix(const Eigen::SparseMatrix<double>& A, Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> & II, Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> & JJ, Eigen::VectorXd & SS)
 {
 	II.resize(A.nonZeros());
 	JJ.resize(A.nonZeros());

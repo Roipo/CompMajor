@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(output)
+project(CompMajor)
 
 # Option to enable PARDISO
 option(USE_PARDISO "Use Intel MKL PARDISO solver" OFF)
@@ -33,13 +33,13 @@ set(SRCFILES
 )
 
 
-set(MKL_ARCH "intel64")
-set(MKL_LINK "static")
-set(MKL_THREADING "sequential")
-find_package(MKL REQUIRED)
-find_package(MKL CONFIG REQUIRED PATHS $ENV{MKLROOT})
-
-
+# set(MKL_ARCH "intel64")
+# set(MKL_LINK "static")
+# set(MKL_THREADING "sequential")
+# find_package(MKL REQUIRED)
+# find_package(MKL CONFIG REQUIRED PATHS $ENV{MKLROOT})
+set(BLA_VENDOR Intel10_64_dyn)
+find_package(BLAS REQUIRED)
 
 # Create executable
 add_executable(${PROJECT_NAME}_bin ${SRCFILES})
@@ -56,4 +56,5 @@ IF(USE_PARDISO)
     set(SRCFILES ${SRCFILES} src/PardisoSolver.cpp)
 ENDIF()
 
-target_link_libraries(${PROJECT_NAME}_bin PUBLIC MKL::MKL)
+# target_link_libraries(${PROJECT_NAME}_bin PUBLIC MKL::MKL)
+target_link_libraries(${PROJECT_NAME}_bin PUBLIC BLAS::BLAS)
