@@ -32,21 +32,25 @@ int Newton::step()
 	last_step_timing.matrix_prep_time = std::chrono::duration<double>(prep_end - prep_start).count();
 
 	auto factor_start = std::chrono::high_resolution_clock::now();
+	std::cout << "Attempting factorization " << std::endl;
 	try
 	{
 		pardiso.factorize();
 	}
-	catch (runtime_error& err)
+	catch (std::exception &err)
 	{
-		cout << err.what();
+		cout << err.what() << std::endl;
 		return -1;
 	}
 	auto factor_end = std::chrono::high_resolution_clock::now();
 	last_step_timing.factorization_time = std::chrono::duration<double>(factor_end - factor_start).count();
 
+	std::cout << "Factorization succeeded" << std::endl;
+
 	auto solve_start = std::chrono::high_resolution_clock::now();
 	Vec rhs = -g;
 	pardiso.solve(rhs, p);
+	std::cout << "Solved Newton system; got p with " << p.rows() << " rows" << std::endl;
 	auto solve_end = std::chrono::high_resolution_clock::now();
 	last_step_timing.solve_time = std::chrono::duration<double>(solve_end - solve_start).count();
 

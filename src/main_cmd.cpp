@@ -64,7 +64,8 @@ int main(int argc, char** argv)
 		
 		// Time the step() function
 		auto step_start = std::chrono::high_resolution_clock::now();
-		solver.step();
+		int res = solver.step();
+		if (res != 0) return res;
 		auto step_end = std::chrono::high_resolution_clock::now();
 		double step_duration = std::chrono::duration<double>(step_end - step_start).count();
 		total_step_time += step_duration;
