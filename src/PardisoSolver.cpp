@@ -7,10 +7,8 @@
 
 #include "PardisoSolver.h"
 #include <igl/sortrows.h>
-#include <igl/unique.h>
-#include <igl/unique_rows.h>
 #include <igl/matlab_format.h>
-
+#include <numeric>
 
 using namespace std;
 //#define PLOTS_PARDISO
@@ -142,13 +140,12 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
       numRows = II_[i];
   numRows ++;
   
-  
   //make sure diagonal terms are included, even as zeros (pardiso claims this is necessary for best performance, and it also prevents it from occasionally hanging with zero diagonal elements)
   vectorTypeI II;
   vectorTypeI JJ;
   vectorTypeS SS;
   MKL_INT numel = II_.size();
-  MKL_INT ntotal = numel +numRows;
+  MKL_INT ntotal = numel + numRows;
   II.resize(ntotal);
   JJ.resize(ntotal);
   SS.resize(ntotal);
@@ -175,76 +172,64 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
     for (MKL_INT i = 0; i<II.size();++i)
       if (II[i]<=JJ[i])
         lower_triangular_ind.push_back(i);
-    M0.resize(lower_triangular_ind.size(),3);
+    M0.resize(lower_triangular_ind.size(),2);
     SS_true.resize(lower_triangular_ind.size(),1);
     for (MKL_INT i = 0; i<lower_triangular_ind.size();++i)
     {
-      M0.row(i)<< II[lower_triangular_ind[i]], JJ[lower_triangular_ind[i]], i;
+      M0.row(i) << II[lower_triangular_ind[i]], JJ[lower_triangular_ind[i]];
       SS_true[i] = SS[lower_triangular_ind[i]];
     }
   }
   else
   {
-    M0.resize(II.size(),3);
+    M0.resize(II.size(),2);
     for (MKL_INT i = 0; i<II.size();++i)
-      M0.row(i)<< II[i], JJ[i], i;
+      M0.row(i) << II[i], JJ[i];
   }
-  
-  //temps
-  Eigen::Matrix<MKL_INT, Eigen::Dynamic, Eigen::Dynamic> t;
-  Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> tI;
-  
+
   Eigen::Matrix<MKL_INT, Eigen::Dynamic, Eigen::Dynamic> M_;
-  igl::sortrows(M0, true, M_, tI);
-  
-  MKL_INT si,ei,currI;
-  si = 0;
-  while (si<M_.rows())
+  Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> srcTripletIndex;
+  igl::sortrows(M0, true, M_, srcTripletIndex);
+
+  std::vector<MKL_INT> numRowsPerUniqueRow;
+  numRowsPerUniqueRow.reserve(M_.rows());
+  numRowsPerUniqueRow.push_back(1);
+  for (int i = 1; i < M_.rows(); ++i)
   {
-    currI = M_(si,0);
-    ei = si;
-    while (ei<M_.rows() && M_(ei,0) == currI)
-      ++ei;
-    igl::sortrows(M_.block(si, 1, ei-si, 2).eval(), true, t, tI);
-    M_.block(si, 1, ei-si, 2) = t;
-    si = ei;
+    if (M_.row(i) == M_.row(i - 1)) { ++numRowsPerUniqueRow.back(); continue; }
+    numRowsPerUniqueRow.push_back(1);
   }
-  
-  Eigen::Matrix<MKL_INT, Eigen::Dynamic, Eigen::Dynamic> M;
-  Eigen::Matrix<MKL_INT, Eigen::Dynamic, 1> IM_;
-  igl::unique_rows(M_.leftCols(2).eval(), M, IM_, tI);
-  MKL_INT numUniqueElements = M.rows();
+  MKL_INT numUniqueElements = numRowsPerUniqueRow.size();
+
+  // Construct the CSR index arrays (ia, ja)
+  // and the indices of triplets that sum to produce each CSR entry (iis).
   iis.resize(numUniqueElements);
-  for (MKL_INT i=0; i<numUniqueElements; ++i)
+  ia.setZero(numRows + 1);
+  ja.resize(numUniqueElements);
+
+  // In first pass, fill in `ja` and `iis`;
+  // also compute row nnz count in entries 1..numRows of `ia`.
+  MKL_INT *row_nnz = ia.data() + 1;
+  for (MKL_INT i = 0, back = 0; i < numUniqueElements; ++i)
   {
-    si = IM_(i);
-    if (i<numUniqueElements-1)
-      ei = IM_(i+1);
-    else
-      ei = M_.rows();
-    iis[i] = M_.block(si, 2, ei-si, 1);
+    ja[i] = M_(back, 1) + 1; // Pardiso uses 1-based indices...
+    iis[i] = srcTripletIndex.segment(back, numRowsPerUniqueRow[i]);
+    ++row_nnz[M_(back, 0)];
+    back += numRowsPerUniqueRow[i];
   }
-  
+
+  // Next do a cumulative sum of `row_nnz` to put row back pointers in
+  // `ia[1..numRows]` and start pointers in `ia[0..numRows - 1]`.
+  std::partial_sum(row_nnz, row_nnz + numRows, row_nnz);
+  assert(ia[numRows] == numUniqueElements);
+  ia.array() += 1; // Pardiso uses 1-based indices...
+
   a.resize(numUniqueElements, 1);
   for (MKL_INT i=0; i<numUniqueElements; ++i)
   {
     a(i) = 0;
     for (MKL_INT j=0; j<iis[i].size(); ++j)
       a(i) += SS_true[iis[i](j)];
-  }
-  
-  // now M_ and elements in sum have the row, column and indices in sum of the
-  // unique non-zero elements in B1
-  ia.setZero(numRows+1,1);ia(numRows) = numUniqueElements+1;
-  ja = M.col(1).array()+1;
-  currI = -1;
-  for (MKL_INT i=0; i<numUniqueElements; ++i)
-  {
-    if(currI != M(i,0))
-    {
-      ia(M(i,0)) = i+1;//do not subtract 1
-      currI = M(i,0);
-    }
   }
   
 #ifdef PLOTS_PARDISO
@@ -263,9 +248,6 @@ void PardisoSolver<vectorTypeI,vectorTypeS>::set_pattern(const vectorTypeI &II_,
     printf("%.2f ",a[i]);
   printf("\n\n");
 #endif
-  
-  // matrix in CRS can be expressed with ia, ja and iis
-  
 }
 
 template <typename vectorTypeI, typename vectorTypeS>

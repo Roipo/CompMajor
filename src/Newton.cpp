@@ -62,22 +62,12 @@ void Newton::initialize()
 {
 	eval_fgh(m_x, f, g, h);
 	
-	
 	IId = energy->symDirichlet.II;
 	JJd = energy->symDirichlet.JJ;
 	SSd = energy->symDirichlet.SS;
-
-    // convert to eigen triplets
-    std::vector<Eigen::Triplet<double>> triplets;
-    triplets.reserve(IId.size());
-    for (size_t i = 0; i < IId.size(); ++i) {
-        triplets.emplace_back(IId[i], JJd[i], SSd[i]);
-    }
     
     // Create sparse matrix (assuming you want a square matrix)
     MKL_INT n = *std::max_element(IId.begin(), IId.end()) + 1;
-    Eigen::SparseMatrix<double> sparse_matrix(n, n);
-    sparse_matrix.setFromTriplets(triplets.begin(), triplets.end());
 
 	// find pattern for initialization
 	II.insert(II.end(), IId.begin(), IId.end());
@@ -106,7 +96,6 @@ double Newton::eval_ls(Mat& x)
 {
 	double f;
 	Vec g;
-	SpMat h;
 	Vec vec_x = Eigen::Map<Vec>(x.data(), x.rows()  * x.cols(), 1);
 	eval_f(vec_x, f);
 	return f;
