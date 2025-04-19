@@ -15,6 +15,8 @@ public:
 	void init(const MatX3& V, const MatX3i& F);
 
 	void computeTutte(const MatX3& V, const MatX3i& F, MatX2 &uv_init);
+	void map_vertices_to_circle_area_normalize(const MatX3& V, const MatX3i& F, const Eigen::VectorXi& bnd, Eigen::MatrixXd& UV);
+
 	// Pointer to the energy class
 	shared_ptr<Energy> energy;
 

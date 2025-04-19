@@ -8,6 +8,8 @@
 
 using namespace std;
 
+void normalizeMeshArea(MatX3& V, MatX3i& F);
+
 int main(int argc, char** argv)
 {
 	// unsigned int num_threads = max(atoi(getenv("OMP_NUM_THREADS")), 1);
@@ -26,6 +28,7 @@ int main(int argc, char** argv)
 		cerr << "Failed to load mesh: " << argv[1] << endl;
 		return false;
 	}
+	normalizeMeshArea(V, F);
 	
 	Newton solver;
 	solver.init(V, F);
@@ -151,4 +154,14 @@ int main(int argc, char** argv)
 	cout << "Saved final mesh to: " << argv[2] << endl;
 	
 	return 0;
+}
+
+void normalizeMeshArea(MatX3& V, MatX3i& F) {
+	Eigen::VectorXd M;
+	// set uv coords scale
+	igl::doublearea(V, F, M);
+	M /= 2.0;
+
+	double mesh_area = M.sum();
+	V /= sqrt(mesh_area);
 }
