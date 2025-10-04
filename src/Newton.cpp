@@ -24,9 +24,10 @@ int Newton::step()
 
 	SSd = energy->symDirichlet.SS;
 
-	auto prep_start = std::chrono::high_resolution_clock::now();
+	// auto prep_start = std::chrono::high_resolution_clock::now();
 	SS.clear();
 	SS.insert(SS.end(), SSd.begin(), SSd.end());
+	auto prep_start = std::chrono::high_resolution_clock::now();
 	pardiso.update_a(SS);
 	auto prep_end = std::chrono::high_resolution_clock::now();
 	last_step_timing.matrix_prep_time = std::chrono::duration<double>(prep_end - prep_start).count();
