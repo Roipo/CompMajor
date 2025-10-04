@@ -126,7 +126,7 @@ void DistortionSymDir::hessian(const MatX2& X)
 	//anti similarity beta
 	Eigen::VectorXd cY = 0.5*(a - d);
 	Eigen::VectorXd dY = 0.5*(b + c);
-#pragma omp parallel for num_threads(24)
+#pragma omp parallel for // num_threads(1)
 	for (int i = 0; i < numF; ++i) {
 		//vectors of size 6
 		//svd derivatives
@@ -156,12 +156,13 @@ void DistortionSymDir::hessian(const MatX2& X)
 	for (int i = 0; i < F.rows(); i++)
 	{
 		int base = 21 * i;
-		SS[base] += 1e-6;
-		SS[base + 2] += 1e-6;
-		SS[base + 5] += 1e-6;
-		SS[base + 9] += 1e-6;
-		SS[base + 14] += 1e-6;
-		SS[base + 20] += 1e-6;
+		double hessian_shift = 1e-6;
+		SS[base] += hessian_shift;
+		SS[base + 2] += hessian_shift;
+		SS[base + 5] += hessian_shift;
+		SS[base + 9] += hessian_shift;
+		SS[base + 14] += hessian_shift;
+		SS[base + 20] += hessian_shift;
 	}
 }
 
