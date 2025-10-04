@@ -3,12 +3,15 @@
 #include "Utils.h"
 #include "Energy.h"
 
+#include <fstream>
 #include <iostream>
 #include <igl/readOBJ.h>
 #include <igl/file_dialog_open.h>
 #include <igl/flipped_triangles.h>
 #include <igl/map_vertices_to_circle.h>
 #include <igl/harmonic.h>
+
+void writeUVToFile(const MatX2 &uv_init);
 
 Solver::Solver()
 	:
@@ -21,6 +24,8 @@ void Solver::init(const MatX3& V, const MatX3i& F)
 	using namespace placeholders;
 	this->F = F;
 	computeTutte(V, F, uv);
+	// Johnson Debug: see uv coordinates after initialization
+	// writeUVToFile(uv);
 	energy->init(F.rows(), V, F);
 	m_x = Eigen::Map<Vec>(uv.data(), uv.rows() * uv.cols());
 	eval_f = [this](const Vec& x, double& f) { energy->evaluate_f(x, f); };
@@ -90,4 +95,19 @@ void Solver::map_vertices_to_circle_area_normalize(
 	  UV.row(map_ij[bnd[i]]) << radius*cos(frac), radius*sin(frac);
 	}
 
+}
+
+void writeUVToFile(const MatX2 &uv) {
+	std::ofstream file("uv_initial.txt");
+	if (!file) {
+        std::cerr << "Could not open uv_test.txt for writing\n";
+		return;
+    }
+
+	for (int i = 0; i < uv.rows(); ++i)
+    	file << uv(i,0) << ' ' << uv(i,1) << '\n';
+
+	file.close();
+	cout << "Write Initialization UV to uv_initial.txt Successfully!" << endl;
+	return;
 }
