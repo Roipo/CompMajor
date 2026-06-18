@@ -126,6 +126,7 @@ void DistortionSymDir::hessian(const MatX2& X)
 	//anti similarity beta
 	Eigen::VectorXd cY = 0.5*(a - d);
 	Eigen::VectorXd dY = 0.5*(b + c);
+	// std::cout<< "[Debug] OMP Threads: " << omp_get_max_threads() << std::endl; // debug for threading in OMP
 #pragma omp parallel for // num_threads(1)
 	for (int i = 0; i < numF; ++i) {
 		//vectors of size 6

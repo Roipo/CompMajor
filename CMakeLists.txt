@@ -32,6 +32,10 @@ set(SRCFILES
     src/PardisoSolver.cpp
 )
 
+# Find OpenMP (optional)
+if (NOT TARGET OpenMP::OpenMP_CXX)
+    find_package(OpenMP)
+endif()
 
 # set(MKL_ARCH "intel64")
 # set(MKL_LINK "static")
@@ -58,3 +62,6 @@ ENDIF()
 
 # target_link_libraries(${PROJECT_NAME}_bin PUBLIC MKL::MKL)
 target_link_libraries(${PROJECT_NAME}_bin PUBLIC BLAS::BLAS)
+if (TARGET OpenMP::OpenMP_CXX)
+    target_link_libraries(${PROJECT_NAME}_bin PUBLIC OpenMP::OpenMP_CXX)
+endif()
